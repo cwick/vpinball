@@ -589,22 +589,27 @@ const vector<PinmameGIState>& Controller::GetChangedGIStrings()
 
 const vector<PinmameSolenoidState>& Controller::GetChangedSolenoids()
 {
-   UpdateDeviceSrc();
-
-   if (m_devices.nDevices > m_prevDeviceState.size())
-      m_prevDeviceState.resize(m_devices.nDevices, 0);
-
-   m_solenoidStates.clear();
-   for (int solIndex : m_solenoids)
+   const int maxSolenoids = PinmameGetMaxSolenoids();
+   if (maxSolenoids <= 0)
    {
-      const uint8_t state = GetSolenoidValue(m_devices.deviceDefs[solIndex].id.deviceId, m_devices.GetByteState(solIndex));
-      if (m_prevDeviceState[solIndex] != state)
-      {
-         if (m_devices.deviceDefs[solIndex].id.deviceId >= 64 || (m_solMask & (1ULL << m_devices.deviceDefs[solIndex].id.deviceId)) != 0)
-            m_solenoidStates.emplace_back(m_devices.deviceDefs[solIndex].id.deviceId, state);
-         m_prevDeviceState[solIndex] = state;
-      }
+      m_solenoidStates.clear();
+      return m_solenoidStates;
    }
+
+   // Preserve the legacy VPinMAME behavior expected by table scripts. Unlike
+   // the device API, this applies PinMAME's solenoid smoothing/integration.
+   m_solenoidStates.resize(maxSolenoids);
+   int count = PinmameGetChangedSolenoids(m_solenoidStates.data());
+   if (count < 0)
+      count = 0;
+   m_solenoidStates.resize(count);
+
+   // SolMask is maintained by VPX since the device API migration.
+   const auto firstMasked = std::remove_if(m_solenoidStates.begin(), m_solenoidStates.end(), [this](const PinmameSolenoidState& state) {
+      return state.solNo < 64 && (m_solMask & (1ULL << state.solNo)) == 0;
+   });
+   m_solenoidStates.erase(firstMasked, m_solenoidStates.end());
+
    return m_solenoidStates;
 }
 
