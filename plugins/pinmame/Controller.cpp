@@ -549,41 +549,21 @@ int Controller::GetGIString(int giString) const
 
 const vector<PinmameLampState>& Controller::GetChangedLamps()
 {
-   UpdateDeviceSrc();
-
-   if (m_devices.nDevices > m_prevDeviceState.size())
-      m_prevDeviceState.resize(m_devices.nDevices, 0);
-
-   m_lampStates.clear();
-   for (int lampIndex : m_lamps)
-   {
-      const uint8_t state = GetLampValue(m_devices.GetByteState(lampIndex));
-      if (m_prevDeviceState[lampIndex] != state)
-      {
-         m_lampStates.emplace_back(m_devices.deviceDefs[lampIndex].id.deviceId, state);
-         m_prevDeviceState[lampIndex] = state;
-      }
-   }
+   m_lampStates.resize(PinmameGetMaxLamps()); // TODO we should use the actual size of the running machine
+   int count = PinmameGetChangedLamps(m_lampStates.data());
+   if (count < 0) // report error ?
+      count = 0;
+   m_lampStates.resize(count);
    return m_lampStates;
 }
 
 const vector<PinmameGIState>& Controller::GetChangedGIStrings()
 {
-   UpdateDeviceSrc();
-
-   if (m_devices.nDevices > m_prevDeviceState.size())
-      m_prevDeviceState.resize(m_devices.nDevices, 0);
-
-   m_giStates.clear();
-   for (int giIndex : m_gis)
-   {
-      const uint8_t state = GetGIValue(m_devices.GetFloatState(giIndex));
-      if (m_prevDeviceState[giIndex] != state)
-      {
-         m_giStates.emplace_back(m_devices.deviceDefs[giIndex].id.deviceId, state);
-         m_prevDeviceState[giIndex] = state;
-      }
-   }
+   m_giStates.resize(PinmameGetMaxGIs()); // TODO we should use the actual size of the running machine
+   int count = PinmameGetChangedGIs(m_giStates.data());
+   if (count < 0) // report error ?
+      count = 0;
+   m_giStates.resize(count);
    return m_giStates;
 }
 
