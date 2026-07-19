@@ -1,0 +1,2 @@
+- Never try to build the project. I will do it for you.
+- This project supports CMake but I use Visual Studio instead.
