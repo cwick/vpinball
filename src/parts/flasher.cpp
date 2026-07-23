@@ -1387,7 +1387,8 @@ void Flasher::Render(const unsigned int renderMask)
          break;
 
       case FlasherData::EXT_RENDER:
-         if (m_d.m_renderStyle >= VPXWindowId::VPXWINDOW_Backglass && m_d.m_renderStyle <= VPXWindowId::VPXWINDOW_Topper)
+         if (m_d.m_renderStyle >= VPXWindowId::VPXWINDOW_Backglass && m_d.m_renderStyle <= VPXWindowId::VPXWINDOW_Topper
+          && !g_pplayer->m_ancillaryWndRenderers[m_d.m_renderStyle].empty())
          {
             const float width = m_maxx - m_minx;
             const float height = m_maxy - m_miny;
