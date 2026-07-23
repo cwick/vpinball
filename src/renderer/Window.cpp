@@ -322,6 +322,20 @@ void Window::RaiseAndFocus()
    SDL_RaiseWindow(m_nwnd);
    if (m_windowMode != WindowMode::Windowed) // When window loose focus, it may loose its fullscreen state, so restore it
       SDL_SetWindowFullscreen(m_nwnd, true);
+
+#ifdef _WIN32
+   // When launched from a fullscreen frontend, raising the VR preview can leave
+   // the native foreground/activation/focus transition incomplete. Force one real
+   // focus transition so Windows establishes the preview as the keyboard input
+   // window and SDL receives the matching WM_SETFOCUS.
+   if (m_windowId == VPXWindowId::VPXWINDOW_VRPreview)
+   {
+      const HWND hwnd = GetNativeHWND();
+      ::SetFocus(nullptr);
+      ::SetActiveWindow(hwnd);
+      ::SetFocus(hwnd);
+   }
+#endif
 }
 
 bool Window::IsFocused() const {
