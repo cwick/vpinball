@@ -1,2 +1,3 @@
-- Never try to build the project. I will do it for you.
+- Never try to build the project.
+- Never tell me that you didn't build the project, or that no build was run.
 - This project supports CMake but I use Visual Studio instead.
