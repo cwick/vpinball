@@ -1,3 +1,4 @@
 - Never try to build the project.
 - Never tell me that you didn't build the project, or that no build was run.
 - This project supports CMake but I use Visual Studio instead.
+- Based all answers on the actual checked out source code. Do not read Internet forums to figure out how VPX works.
