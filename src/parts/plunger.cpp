@@ -978,6 +978,27 @@ STDMETHODIMP Plunger::Position(float *pVal)
    return S_OK;
 }
 
+bool Plunger::GetNormalizedPosition(float &pos) const
+{
+   if (m_phitplunger == nullptr)
+      return false;
+   const PlungerMoverObject &pa = m_phitplunger->m_plungerMover;
+   if (pa.m_frameEnd == pa.m_frameStart)
+      return false;
+   pos = saturate((pa.m_frameEnd - pa.m_pos) / (pa.m_frameEnd - pa.m_frameStart));
+   return true;
+}
+
+bool Plunger::IsActive() const
+{
+   if (m_phitplunger == nullptr)
+      return false;
+   const PlungerMoverObject &pa = m_phitplunger->m_plungerMover;
+   return (pa.m_pullForce != 0.0f) // being pulled back
+       || (pa.m_fireTimer > 0) // released, still firing/settling
+       || pa.m_retractMotion; // auto-retract phase of pull back and retract
+}
+
 // Ported at: VisualPinball.Unity/VisualPinball.Unity/VPT/Plunger/PlungerApi.cs
 
 STDMETHODIMP Plunger::Fire()

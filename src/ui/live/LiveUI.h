@@ -13,6 +13,7 @@
 #include "EditorUI.h"
 #include "NotificationOverlay.h"
 #include "PlumbOverlay.h"
+#include "PlungerOverlay.h"
 #include "BallControl.h"
 
 class LiveUI final
@@ -79,6 +80,9 @@ private:
 
    // Emulated plumb overlay
    PlumbOverlay m_plumbOverlay;
+
+   // Plunger position overlay
+   PlungerOverlay m_plungerOverlay;
 
    // Notifications
    NotificationOverlay m_notificationOverlay;

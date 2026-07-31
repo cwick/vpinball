@@ -231,6 +231,7 @@ void LiveUI::UpdateScale()
    {
       m_perfUI.SetUIScale(overlayScale);
       m_plumbOverlay.SetUIScale(overlayScale);
+      m_plungerOverlay.SetUIScale(overlayScale);
       SetupImGuiStyle(m_editorUI.IsOpened());
    }
 }
@@ -377,6 +378,9 @@ void LiveUI::RenderUI()
 
    // Display plumb state overlay
    m_plumbOverlay.Update();
+
+   // Display plunger position overlay
+   m_plungerOverlay.Update();
 
    // Display notification overlays except when script has an unaligned rotation
    m_notificationOverlay.Update(true, m_overlayFont);

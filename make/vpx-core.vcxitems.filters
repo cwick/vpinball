@@ -468,6 +468,9 @@
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/PlumbOverlay.cpp">
       <Filter>ui\live</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/PlungerOverlay.cpp">
+      <Filter>ui\live</Filter>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/EditorUI.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
@@ -1407,6 +1410,9 @@
       <Filter>ui\live</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/PlumbOverlay.h">
+      <Filter>ui\live</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/PlungerOverlay.h">
       <Filter>ui\live</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/EditorUI.h">

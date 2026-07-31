@@ -156,6 +156,15 @@ public:
 
    void WriteRegDefaults() final;
 
+   // Normalized position of the simulated plunger rod, in the [0..1] range, 0 being
+   // fully forward and 1 fully retracted. Returns false if the plunger is not simulated.
+   bool GetNormalizedPosition(float &pos) const;
+
+   // True while the player is operating the plunger: holding it back, or during the
+   // release and retract phases that follow. This tracks the keyboard/button plunger
+   // states and not the rod position, so it stays false for a hardware plunger sensor.
+   bool IsActive() const;
+
    DECLARE_REGISTRY_RESOURCEID(IDR_PLUNGER)
    // ISupportsErrorInfo
    STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);

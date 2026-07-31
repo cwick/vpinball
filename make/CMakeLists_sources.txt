@@ -279,6 +279,8 @@ set(VPX_SOURCES
    src/ui/live/PlotData.h
    src/ui/live/PlumbOverlay.cpp
    src/ui/live/PlumbOverlay.h
+   src/ui/live/PlungerOverlay.cpp
+   src/ui/live/PlungerOverlay.h
    
    src/ui/live/editor/EditableUIPart.h
    src/ui/live/editor/PropertyPane.h
