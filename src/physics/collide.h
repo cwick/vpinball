@@ -88,6 +88,10 @@ struct CollisionEvent
    //bool m_hitRigid; // rigid body collision? //!! this is almost never ever triggered (as 99.999999% true when actually handled), and if then only once while rolling over a trigger, etc, with a very minimalistic special handling afterwards (if false), so for now removed
 
    bool m_isContact; // set to true if impact velocity is ~0
+
+   // Total normal impulse applied at this contact over the current tick's solve. In velocity
+   // units, not force.
+   float m_accumNormalImpulse = 0.f;
 };
 
 
@@ -101,6 +105,7 @@ public:
    virtual int GetType() const = 0;
    virtual void Collide(const CollisionEvent& coll) = 0;
    virtual void Contact(CollisionEvent& coll, const float dtime); // apply contact forces for the given time interval. Ball, Spinner and Gate do nothing here, Flipper has a specialized handling
+   virtual void FinalizeContact(CollisionEvent& coll, const float dtime); // once-per-tick contact effects (friction, spin damping), run after the repeated Contact() calls have settled
    virtual void CalcHitBBox() = 0;
 
    virtual MoverObject *GetMoverObject() { return nullptr; }

@@ -68,11 +68,6 @@
 
 //#define NEW_PHYSICS
 
-// low velocity stabilization ... if embedding occurs add some velocity
-#ifdef NEW_PHYSICS
- #define C_EMBEDVELLIMIT 5.f // can be undefd
-#endif
-
 // old workarounds, not needed anymore?!
 #ifndef NEW_PHYSICS
  #define C_EMBEDSHOT_PLANE // push pos up if ball embedded in plane
@@ -93,6 +88,24 @@
 // trigger/kicker boundary crossing hysterisis, also slow/static ball<->ball and to some extent general ball<->object interactions
 #define STATICTIME 0.02f // smallest time/intersection difference allowed in the simulation, if amount of all intersections found within that smaller timeframe is > STATICCNTS
 #define STATICCNTS 10    // 0=always clamp to the minimum STATICTIME difference, no exceptions, will/should lead to more penetration!
+
+// Contact solver. Cap on the sweeps a ball's simultaneous contacts get to agree. Keep low: the
+// contact pass runs per CCD sub-step, so iterations multiply.
+#define C_CONTACT_ITERATIONS 4
+
+// Impulse change below which a sweep counts as settled and the rest are skipped.
+#define C_CONTACT_TOLERANCE  1e-3f
+
+// Fraction of its overlap a contact works off per physics step. Too low and deepening overlap
+// outruns the correction; too high and resting balls buzz or get flicked off surfaces.
+#define C_CONTACT_BIAS 0.2f
+
+// Contacts ignore penetration shallower than this. Raise if resting balls buzz.
+#define C_CONTACT_SLOP 0.0f
+
+// Ceiling on the resulting separating velocity, so a ball that arrives deeply embedded is not
+// launched. A multiple of the resting-contact velocity, to scale with the other thresholds.
+#define C_CONTACT_MAX_BIAS_VEL (5.0f * C_CONTACTVEL)
 
 // Flippers:
 #define C_INTERATIONS 20 // Precision level and cycles for interative calculations // acceptable contact time ... near zero time

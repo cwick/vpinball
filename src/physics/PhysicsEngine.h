@@ -58,6 +58,7 @@ public:
 private:
    void AddCabinetBoundingHitShapes(PinTable *const table);
    void PhysicsSimulateCycle(float dtime); // Perform continuous collision detection for the given amount of delta time
+   void SolveContacts(const float hittime); // Resolve this tick's contacts
 
    void ReleaseVHO(const vector<HitObject *> &vho, bool isUI);
 
@@ -69,6 +70,7 @@ private:
 
    bool m_recordContacts = false; // flag for DoHitTest()
    vector<CollisionEvent> m_contacts;
+   vector<size_t> m_staticContacts; // indices into m_contacts, non-flipper only; member to avoid allocating on the physics hot path
 
    uint64_t m_startTime_usec; // Time when the simulation started (creation of this object)
    uint64_t m_curPhysicsFrameTime; // Time where the last machine simulation (physics, timers, scripts,...) stopped

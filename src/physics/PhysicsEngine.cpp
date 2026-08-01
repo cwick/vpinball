@@ -490,6 +490,69 @@ void PhysicsEngine::UpdatePhysics(uint64_t targetTimeUs)
    g_pplayer->m_logicProfiler.ExitProfileSection();
 }
 
+// Resolve this tick's contacts against static geometry, sweeping a ball's simultaneous contacts
+// repeatedly so each one re-reads the velocity the others have already changed. One pass cannot
+// do this: every contact would size its impulse from the same start-of-tick velocity and their
+// corrections would sum, so two coplanar contacts push a ball twice as hard as either needs.
+void PhysicsEngine::SolveContacts(const float hittime)
+{
+   // Flippers are not swept: HitFlipper::Contact() drives the flipper body too and is not safe
+   // to re-enter within a tick.
+   for (size_t i = 0; i < m_contacts.size(); ++i)
+      if (m_contacts[i].m_obj->GetType() == eFlipper)
+         m_contacts[i].m_obj->Contact(m_contacts[i], hittime);
+
+   m_staticContacts.clear();
+   for (size_t i = 0; i < m_contacts.size(); ++i)
+      if (m_contacts[i].m_obj->GetType() != eFlipper)
+      {
+         m_contacts[i].m_accumNormalImpulse = 0.f;
+         m_staticContacts.push_back(i);
+      }
+
+   if (m_staticContacts.empty())
+      return;
+
+   // Solve each ball separately: nothing couples contacts on different balls (BALL_CONTACTS is
+   // disabled), so sweeping them together would only make one unsettled ball keep the rest
+   // iterating. Hit detection fills m_contacts per ball, so each ball's run is contiguous - if
+   // that ever stops holding, a ball just gets solved as several groups, slower but not wrong.
+   for (size_t begin = 0; begin < m_staticContacts.size(); )
+   {
+      const HitBall* const ball = m_contacts[m_staticContacts[begin]].m_ball;
+      size_t end = begin + 1;
+      while (end < m_staticContacts.size() && m_contacts[m_staticContacts[end]].m_ball == ball)
+         ++end;
+
+      // Direction alternates: the contact swept first sizes its impulse against a velocity
+      // nothing else has touched, the one swept last absorbs whatever the others left, so a
+      // group that stops before settling leans towards the head of the run. Reversing every
+      // other sweep hands that advantage to the opposite end.
+      for (int iter = 0; iter < C_CONTACT_ITERATIONS; ++iter)
+      {
+         float maxDelta = 0.f;
+         for (size_t j = 0; j < end - begin; ++j)
+         {
+            const size_t k = (iter & 1) ? end - 1 - j : begin + j;
+            CollisionEvent& coll = m_contacts[m_staticContacts[k]];
+            const float before = coll.m_accumNormalImpulse;
+            coll.m_obj->Contact(coll, hittime);
+            maxDelta = max(maxDelta, fabsf(coll.m_accumNormalImpulse - before));
+         }
+         if (maxDelta < C_CONTACT_TOLERANCE)
+            break;
+      }
+
+      for (size_t k = begin; k < end; ++k)
+      {
+         CollisionEvent& coll = m_contacts[m_staticContacts[k]];
+         coll.m_obj->FinalizeContact(coll, hittime);
+      }
+
+      begin = end;
+   }
+}
+
 void PhysicsEngine::PhysicsSimulateCycle(float dtime) // move physics forward to this time
 {
    // PLOGD << "Cycle " << dtime;
@@ -675,14 +738,7 @@ void PhysicsEngine::PhysicsSimulateCycle(float dtime) // move physics forward to
 
       // Maybe a two-phase setup where we first process only contacts, then only collisions
       // could also work.
-      if (rand_mt_01() < 0.5f) // swap order of contact handling randomly
-         for (size_t i = 0; i < m_contacts.size(); ++i)
-            //if (m_contacts[i].m_hittime <= hittime) // does not happen often, and values then look sane, so do this check //!! why does this break some collisions (MM NZ&TT Reloaded Skitso, also CCC (Saloon))? maybe due to ball colliding with multiple things and then some sideeffect?
-               m_contacts[i].m_obj->Contact(m_contacts[i], hittime);
-      else
-         for (int i = (int)m_contacts.size() - 1; i != -1; --i)
-            //if (m_contacts[i].m_hittime <= hittime) // does not happen often, and values then look sane, so do this check //!! why does this break some collisions (MM NZ&TT Reloaded Skitso, also CCC (Saloon))? maybe due to ball colliding with multiple things and then some sideeffect?
-               m_contacts[i].m_obj->Contact(m_contacts[i], hittime);
+      SolveContacts(hittime);
 
       m_contacts.clear();
 

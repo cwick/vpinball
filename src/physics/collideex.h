@@ -142,6 +142,7 @@ public:
    int GetType() const override { return eSpinner; }
    void Collide(const CollisionEvent& coll) override;
    void Contact(CollisionEvent& coll, const float dtime) override { }
+   void FinalizeContact(CollisionEvent& coll, const float dtime) override { }
    void CalcHitBBox() override;
 
    MoverObject *GetMoverObject() override { return &m_spinnerMover; }
@@ -183,6 +184,7 @@ public:
    int GetType() const override { return eGate; }
    void Collide(const CollisionEvent& coll) override;
    void Contact(CollisionEvent& coll, const float dtime) override { }
+   void FinalizeContact(CollisionEvent& coll, const float dtime) override { }
    void CalcHitBBox() override;
 
    MoverObject *GetMoverObject() override { return &m_gateMover; }

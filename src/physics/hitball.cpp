@@ -54,7 +54,7 @@ void HitBall::Collide3DWall(const Vertex3Ds& hitNormal, float elasticity, const 
 #endif
    }
 
-#ifdef C_DISP_GAIN 
+#ifdef C_DISP_GAIN
    // correct displacements, mostly from low velocity, alternative to acceleration processing
    float hdist = -C_DISP_GAIN * m_coll.m_hitdistance; // limit delta noise crossing ramps,
    if (hdist > 1.0e-4f)                               // when hit detection checked it what was the displacement
@@ -284,47 +284,67 @@ void HitBall::Collide(const CollisionEvent& coll)
 #endif
 }
 
-void HitBall::HandleStaticContact(const CollisionEvent& coll, const float friction, const float dtime)
+// One relaxation step for a single contact; called repeatedly per tick until the ball's
+// contacts agree.
+void HitBall::HandleStaticContact(CollisionEvent& coll, const float friction, const float dtime)
 {
    const float normVel = m_d.m_vel.Dot(coll.m_hitnormal); // this should be zero, but only up to +/- C_CONTACTVEL
 
-   // If some collision has changed the ball's velocity, we may not have to do anything.
-   if (normVel <= C_CONTACTVEL)
-   {
-      const Vertex3Ds fe = m_d.m_mass * g_pplayer->m_physics->GetGravity(); // external forces (only gravity for now)
-      const float dot = fe.Dot(coll.m_hitnormal);
-      const float normalForce = std::max(0.0f, -(dot*dtime + coll.m_hit_org_normalvelocity)); // normal force is always nonnegative
+   const Vertex3Ds fe = m_d.m_mass * g_pplayer->m_physics->GetGravity(); // external forces (only gravity for now)
+   const float dot = fe.Dot(coll.m_hitnormal);
 
-      // Add just enough to kill original normal velocity and counteract the external forces.
-      m_d.m_vel += normalForce * coll.m_hitnormal;
+   // Target a small separating velocity rather than zero, so existing overlap is worked off
+   // instead of merely frozen at its current depth (Baumgarte stabilization).
+   //
+   // Scaled by the nominal step, not dtime: dtime is the current CCD sub-step, so dividing by
+   // it would correct harder purely because the tick happened to be finely subdivided.
+   const float penetration = -min(coll.m_hitdistance, 0.f) - C_CONTACT_SLOP;
+   const float bias = (penetration > 0.f)
+      ? min(C_CONTACT_BIAS * penetration / (float)PHYS_FACTOR, C_CONTACT_MAX_BIAS_VEL)
+      : 0.f;
 
-#ifdef C_EMBEDVELLIMIT
-      if (coll.m_hitdistance <= (float)PHYS_TOUCH)
-          m_d.m_vel += coll.m_hitnormal*max(min(C_EMBEDVELLIMIT,-coll.m_hitdistance),(float)PHYS_TOUCH);
-#endif
+   // Negative when this contact is currently pushing harder than needed.
+   const float desired = bias - (dot*dtime + normVel);
 
-#ifdef C_BALL_SPIN_HACK2 // hacky killing of ball spin
-      float vell = m_vel.Length();
-      if (m_vel.Length() < 1.f) //!! 1.f=magic, also see below
-      {
-         vell = (1.f-vell)*(float)C_BALL_SPIN_HACK2;
-         const float damp = (1.0f - friction * saturate(-coll.m_hit_org_normalvelocity / C_CONTACTVEL)) * vell + (1.0f-vell); // do not kill spin completely, otherwise stuck balls will happen during regular gameplay
-         m_angularmomentum *= damp;
-      }
-#endif
+   // Clamping the running total rather than this step's increment is what lets a contact hand
+   // back impulse it over-applied once a neighbour takes up the load; clamp the increment and
+   // repeated steps can only ever pile on more push. The total staying nonnegative is the real
+   // constraint - a surface pushes a ball away, never pulls it back.
+   const float oldAccum = coll.m_accumNormalImpulse;
+   coll.m_accumNormalImpulse = max(oldAccum + desired, 0.f);
+   const float delta = coll.m_accumNormalImpulse - oldAccum;
 
-      ApplyFriction(coll.m_hitnormal, dtime, friction);
-   }
+   m_d.m_vel += delta * coll.m_hitnormal;
 }
 
-void HitBall::ApplyFriction(const Vertex3Ds& hitnormal, const float dtime, const float fricCoeff)
+// Effects that must happen exactly once per tick, and that want the settled normal impulse
+// rather than a partial one - hence separate from the repeated HandleStaticContact().
+void HitBall::FinalizeStaticContact(const CollisionEvent& coll, const float friction, const float dtime)
+{
+#ifdef C_BALL_SPIN_HACK2 // hacky killing of ball spin
+   float vell = m_vel.Length();
+   if (m_vel.Length() < 1.f) //!! 1.f=magic, also see below
+   {
+      vell = (1.f-vell)*(float)C_BALL_SPIN_HACK2;
+      const float damp = (1.0f - friction * saturate(-coll.m_hit_org_normalvelocity / C_CONTACTVEL)) * vell + (1.0f-vell); // do not kill spin completely, otherwise stuck balls will happen during regular gameplay
+      m_angularmomentum *= damp;
+   }
+#endif
+
+   // The settled impulse is the normal force whatever its source, so a wall pressed into by
+   // something other than gravity still gets friction.
+   if (coll.m_accumNormalImpulse > 0.f)
+      ApplyFriction(coll.m_hitnormal, dtime, friction * coll.m_accumNormalImpulse * m_d.m_mass);
+}
+
+// maxFric is the Coulomb limit on the tangential impulse: friction coefficient times the normal
+// impulse at this contact, which the caller supplies since only it knows the normal force.
+void HitBall::ApplyFriction(const Vertex3Ds& hitnormal, const float dtime, const float maxFric)
 {
    const Vertex3Ds surfP = -m_d.m_radius * hitnormal; // surface contact point relative to center of mass
 
    const Vertex3Ds surfVel = SurfaceVelocity(surfP);
    const Vertex3Ds slip = surfVel - surfVel.Dot(hitnormal) * hitnormal; // calc the tangential slip velocity
-
-   const float maxFric = fricCoeff * m_d.m_mass * -g_pplayer->m_physics->GetGravity().Dot(hitnormal);
 
    const float slipspeed = slip.Length();
    Vertex3Ds slipDir;

@@ -17,6 +17,8 @@ float c_hardScatter = 0.0f;
 
 void HitObject::Contact(CollisionEvent& coll, const float dtime) { coll.m_ball->HandleStaticContact(coll, m_friction, dtime); }
 
+void HitObject::FinalizeContact(CollisionEvent& coll, const float dtime) { coll.m_ball->FinalizeStaticContact(coll, m_friction, dtime); }
+
 void HitObject::FireHitEvent(HitBall* const pball)
 {
    if (m_obj && m_fe && m_enabled)

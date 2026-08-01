@@ -87,6 +87,7 @@ public:
    int GetType() const override { return eFlipper; }
    void Collide(const CollisionEvent& coll) override;
    void Contact(CollisionEvent& coll, const float dtime) override;
+   void FinalizeContact(CollisionEvent& coll, const float dtime) override { } // Contact() resolves friction itself
    void CalcHitBBox() override;
    MoverObject *GetMoverObject() override { return &m_flipperMover; }
 

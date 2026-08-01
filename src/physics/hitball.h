@@ -46,13 +46,15 @@ public:
    int GetType() const override { return eBall; }
    void Collide(const CollisionEvent& coll) override;
    void Contact(CollisionEvent& coll, const float dtime) override { }
+   void FinalizeContact(CollisionEvent& coll, const float dtime) override { }
    void CalcHitBBox() override;
 
    float HitRadiusSqr() const { return sqrf((m_hitBBox.right - m_hitBBox.left)*0.5f); } // this returns the extended (by m_vel + magic) squared radius, as needed to be used in the collision detection
    void Collide3DWall(const Vertex3Ds& hitNormal, float elasticity, const float elastFalloff, const float friction, float scatter_angle);
 
-   void ApplyFriction(const Vertex3Ds& hitnormal, const float dtime, const float fricCoeff);
-   void HandleStaticContact(const CollisionEvent& coll, const float friction, const float dtime);
+   void ApplyFriction(const Vertex3Ds& hitnormal, const float dtime, const float maxFric);
+   void HandleStaticContact(CollisionEvent& coll, const float friction, const float dtime);
+   void FinalizeStaticContact(const CollisionEvent& coll, const float friction, const float dtime);
 
    Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
    Vertex3Ds SurfaceAcceleration(const Vertex3Ds& surfP) const;
