@@ -252,6 +252,8 @@ PropFloatDyn(PlayerVR, ControllerCabYOffset, "Cabinet Y Offset"s, "Y offset to a
 PropFloatDyn(PlayerVR, ControllerLockbarScale, "Lockbar size ratio"s, "Lockbar size ratio to apply when using controller view centering"s, 0.5f, 2.0f, 1.f);
 PropFloatUnbounded(PlayerVR, ResFactor, "ResFactor"s, ""s, -1.f);
 PropBool(PlayerVR, LockFeetToGround, "Lock Feet to Ground"s, "Lock cabinet feet to ground. This usually feels more natural (avoid floating cabinet) but may be deactivated for example for playing mini flipper seated at a desk."s, true);
+PropBool(PlayerVR, SeatedMode, "Seated Mode"s, "Play seated using a lower lockbar height."s, false);
+PropFloat(PlayerVR, SeatedLockbarHeight, "Lockbar Height"s, "Lockbar height in centimeters (from ground to top of lockbar) used when playing in seated mode"s, 0.f, 250.f, 75.f);
 
 // Physics override profiles
 PropFloatUnbounded(Player, FlipperPhysicsMass0, "FlipperPhysicsMass0"s, ""s, 1.f);

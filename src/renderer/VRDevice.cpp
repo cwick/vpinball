@@ -127,7 +127,7 @@ VRDevice::VRDevice(const Settings& settings)
    #if defined(ENABLE_XR)
       // Relative scale factor and positioning
       m_lockbarWidth = settings.GetPlayer_LockbarWidth();
-      m_lockbarHeight = settings.GetPlayer_LockbarHeight();
+      m_lockbarHeight = settings.GetPlayerVR_SeatedMode() ? settings.GetPlayerVR_SeatedLockbarHeight() : settings.GetPlayer_LockbarHeight();
       m_lockFeetToGround = settings.GetPlayerVR_LockFeetToGround();
 
       // Fill out an XrApplicationInfo structure detailing the names and OpenXR version.

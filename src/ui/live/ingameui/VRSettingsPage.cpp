@@ -59,13 +59,24 @@ void VRSettingsPage::BuildPage()
    AddItem(std::make_unique<InGameUIItem>(InGameUIItem::LabelType::Header, "Cabinet Layout"s));
 
    AddItem(std::make_unique<InGameUIItem>( //
+      Settings::m_propPlayerVR_SeatedMode, //
+      [this]() { return m_player->m_ptable->m_settings.GetPlayerVR_SeatedMode(); }, //
+      [this](bool v)
+      {
+         Settings& settings = m_player->m_ptable->m_settings;
+         settings.SetPlayerVR_SeatedMode(v, false);
+         m_player->m_vrDevice->SetLockbarHeight(v ? settings.GetPlayerVR_SeatedLockbarHeight() : settings.GetPlayer_LockbarHeight());
+         RequestRebuild();
+      }));
+
+   AddItem(std::make_unique<InGameUIItem>( //
       Settings::m_propPlayer_LockbarWidth, 1.f, "%4.1f cm"s, //
       [this]() { return m_player->m_vrDevice->GetLockbarWidth(); }, //
       [this](float, float v) { m_player->m_vrDevice->SetLockbarWidth(v); }));
 
 #ifdef ENABLE_BGFX
    AddItem(std::make_unique<InGameUIItem>( //
-      Settings::m_propPlayer_LockbarHeight, 1.f, "%4.1f cm"s, //
+      m_player->m_ptable->m_settings.GetPlayerVR_SeatedMode() ? Settings::m_propPlayerVR_SeatedLockbarHeight : Settings::m_propPlayer_LockbarHeight, 1.f, "%4.1f cm"s, //
       [this]() { return m_player->m_vrDevice->GetLockbarHeight(); }, //
       [this](float, float v) { m_player->m_vrDevice->SetLockbarHeight(v); }));
 #endif
