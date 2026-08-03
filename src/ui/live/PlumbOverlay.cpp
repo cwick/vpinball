@@ -48,7 +48,11 @@ void PlumbOverlay::Update()
    const ImVec2 halfSize = fullSize * 0.5f;
    constexpr ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground| ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
       | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-   ImGui::SetNextWindowPos(ImVec2(offset, io.DisplaySize.y - fullSize.y - offset));
+   if (m_player->m_vrDevice)
+      // Keep the overlay inside the readable central area,
+      ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.325f, io.DisplaySize.y * 0.65f), 0, ImVec2(0.5f, 0.5f));
+   else
+      ImGui::SetNextWindowPos(ImVec2(offset, io.DisplaySize.y - fullSize.y - offset));
    ImGui::SetNextWindowSize(fullSize);
    ImGui::Begin("PlumbOverlay", nullptr, window_flags);
    const ImVec2 &pos = ImGui::GetWindowPos();
